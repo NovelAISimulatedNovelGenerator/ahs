@@ -35,11 +35,11 @@ func (p *SimpleProcessor) ProcessStream(
 }
 
 func init() {
-	openaiAPIKey = ""
-	openaiModel = ""
-	openaiBaseURL = ""
+	openaiAPIKey = "sk-rac1XoSpt3eESULMNGKxAvBQq2WwcqIoSJMhsg2ubOU6tiJQ"
+	openaiModel = "kimi-k2-turbo-preview"
+	openaiBaseURL = "http://127.0.0.1:3000/v1"
 
-	input = ""
+	input = "hello"
 }
 
 func newChatModel(ctx context.Context) model.ToolCallingChatModel {

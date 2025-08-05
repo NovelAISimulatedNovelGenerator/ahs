@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -52,7 +53,7 @@ func main() {
 
 	// 启动服务器
 	go func() {
-		if err := srv.Start(); err != nil {
+		if err := srv.Start(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("HTTP服务器启动失败", zap.Error(err))
 		}
 	}()

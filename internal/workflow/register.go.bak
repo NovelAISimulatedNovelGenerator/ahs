@@ -1,0 +1,6 @@
+package workflow
+
+func (m *Manager) RegisterWorkflows() {
+	// Register workflow under here:
+
+}

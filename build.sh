@@ -1,0 +1,1 @@
+go build -o agent_http_server -ldflags="-checklinkname=0" ./cmd

@@ -1,0 +1,1 @@
+curl -s -X POST http://localhost:8081/api/execute -H "Content-Type: application/json" -d '{"workflow":"simp","input":"你好","timeout":10}' | jq

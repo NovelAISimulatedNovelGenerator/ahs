@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"ahs/internal/service"
-	"ahs/internal/workflow/eino_imp/simple_example"
 )
 
 // Manager 示例工作流管理器
@@ -19,10 +18,10 @@ func NewManager() *Manager {
 	m := &Manager{
 		workflows: make(map[string]service.WorkflowProcessor),
 	}
-	
+
 	// 注册示例工作流
 	m.registerExampleWorkflows()
-	
+
 	return m
 }
 
@@ -66,15 +65,13 @@ func (m *Manager) Register(name string, processor service.WorkflowProcessor) {
 func (m *Manager) registerExampleWorkflows() {
 	// 注册简单的回声工作流
 	m.Register("echo", &EchoProcessor{})
-	
+
 	// 注册时间工作流
 	m.Register("time", &TimeProcessor{})
-	
+
 	// 注册计算工作流
 	m.Register("calc", &CalcProcessor{})
 
-	// 注册SimpleExample
-	m.Register("simp", &simpleexample.SimpleProcessor{})
 }
 
 // EchoProcessor 回声处理器
@@ -87,7 +84,7 @@ func (p *EchoProcessor) Process(ctx context.Context, input string) (string, erro
 func (p *EchoProcessor) ProcessStream(ctx context.Context, input string, callback service.StreamCallback) error {
 	// 模拟流式响应
 	words := []string{"回", "声", ":", " ", input}
-	
+
 	for i, word := range words {
 		select {
 		case <-ctx.Done():
@@ -97,7 +94,7 @@ func (p *EchoProcessor) ProcessStream(ctx context.Context, input string, callbac
 			callback(word, i == len(words)-1, nil)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -113,7 +110,7 @@ func (p *TimeProcessor) ProcessStream(ctx context.Context, input string, callbac
 	// 流式输出当前时间
 	now := time.Now()
 	timeStr := now.Format("2006-01-02 15:04:05")
-	
+
 	for i, char := range timeStr {
 		select {
 		case <-ctx.Done():
@@ -123,7 +120,7 @@ func (p *TimeProcessor) ProcessStream(ctx context.Context, input string, callbac
 			callback(string(char), i == len(timeStr)-1, nil)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -135,7 +132,7 @@ func (p *CalcProcessor) Process(ctx context.Context, input string) (string, erro
 	if input == "" {
 		return "请提供计算表达式", nil
 	}
-	
+
 	// 这里可以集成实际的计算逻辑
 	return fmt.Sprintf("计算结果: %s = 42", input), nil
 }
@@ -148,7 +145,7 @@ func (p *CalcProcessor) ProcessStream(ctx context.Context, input string, callbac
 		"执行计算...",
 		fmt.Sprintf("计算结果: %s = 42", input),
 	}
-	
+
 	for i, step := range steps {
 		select {
 		case <-ctx.Done():
@@ -158,6 +155,6 @@ func (p *CalcProcessor) ProcessStream(ctx context.Context, input string, callbac
 			callback(step, i == len(steps)-1, nil)
 		}
 	}
-	
+
 	return nil
 }

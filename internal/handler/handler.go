@@ -13,6 +13,25 @@ import (
 	"go.uber.org/zap"
 )
 
+// contextKey 是用于 context 的自定义 key 类型，避免与其他包冲突
+type contextKey string
+
+const (
+	// RequestBodyKey 用于在 context 中存储原始请求 body
+	RequestBodyKey contextKey = "request_body"
+)
+
+// WithRequestBody 将原始请求 body 放入 context
+func WithRequestBody(ctx context.Context, body []byte) context.Context {
+	return context.WithValue(ctx, RequestBodyKey, body)
+}
+
+// GetRequestBody 从 context 中获取原始请求 body
+func GetRequestBody(ctx context.Context) ([]byte, bool) {
+	body, ok := ctx.Value(RequestBodyKey).([]byte)
+	return body, ok
+}
+
 // Handler HTTP处理器
 type Handler struct {
 	workflowService *service.WorkflowService
@@ -109,15 +128,24 @@ func (h *Handler) Execute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 读取原始 body 内容
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Warn("读取请求体失败", zap.Error(err))
+		http.Error(w, "请求读取错误", http.StatusBadRequest)
+		return
+	}
+
+	// 解析请求结构体
 	var req service.WorkflowRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.Unmarshal(body, &req); err != nil {
 		h.logger.Warn("解析请求失败", zap.Error(err))
 		http.Error(w, "请求格式错误", http.StatusBadRequest)
 		return
 	}
 
-	// 执行工作流
-	ctx := r.Context()
+	// 将原始 body 放入 context
+	ctx := WithRequestBody(r.Context(), body)
 	if req.Timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
@@ -164,22 +192,31 @@ func (h *Handler) ExecuteStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 读取原始 body 内容
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.sendErrorEvent(w, "请求读取错误")
+		flusher.Flush()
+		return
+	}
+
+	// 解析请求结构体
 	var req service.WorkflowRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.Unmarshal(body, &req); err != nil {
 		h.sendErrorEvent(w, "请求格式错误")
 		flusher.Flush()
 		return
 	}
 
-	// 执行流式工作流
-	ctx := r.Context()
+	// 将原始 body 放入 context
+	ctx := WithRequestBody(r.Context(), body)
 	if req.Timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
 		defer cancel()
 	}
 
-	err := h.workflowService.ExecuteStream(ctx, req, func(data string, done bool, err error) {
+	err = h.workflowService.ExecuteStream(ctx, req, func(data string, done bool, err error) {
 		if err != nil {
 			h.sendErrorEvent(w, err.Error())
 			flusher.Flush()
