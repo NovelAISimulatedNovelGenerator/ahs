@@ -67,7 +67,6 @@ type ${WORKFLOW_NAME}Config struct {
 	APIKey  string
 	Model   string
 	BaseURL string
-	Input   string
 }
 
 // ${WORKFLOW_NAME}Processor workflow 处理器
@@ -82,7 +81,6 @@ func New${WORKFLOW_NAME}Processor() *${WORKFLOW_NAME}Processor {
 			APIKey:  "your-api-key-here",
 			Model:   "gpt-3.5-turbo",
 			BaseURL: "https://api.openai.com/v1",
-			Input:   "Hello, this is $WORKFLOW_NAME workflow",
 		},
 	}
 }
