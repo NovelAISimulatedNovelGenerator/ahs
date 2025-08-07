@@ -20,3 +20,9 @@ log:
 worker_pool:
   workers: 8
   queue_size: 32
+
+llm_configs:
+  local:
+    api_base_url: "http://localhost:3000/v1"
+    api_key: "sk-rac1XoSpt3eESULMNGKxAvBQq2WwcqIoSJMhsg2ubOU6tiJQ"
+    model: "glm-4.5"

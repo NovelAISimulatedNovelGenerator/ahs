@@ -23,7 +23,7 @@ const (
 	systemMessage = ``
 )
 
-func (p *agentProcessor) buildGraph() (*compose.Graph[map[string]any, *schema.Message], error) {
+func (p *AgentProcessor) buildGraph() (*compose.Graph[map[string]any, *schema.Message], error) {
 	g := compose.NewGraph[map[string]any, *schema.Message]()
 
 	// 添加提示模板节点
@@ -52,12 +52,13 @@ func (p *agentProcessor) buildGraph() (*compose.Graph[map[string]any, *schema.Me
 	if err := g.AddEdge(nodePrompt, nodeChatModel); err != nil {
 		return nil, err
 	}
-	if err := g.AddEdge(nodeChatModel, nodeTools); err != nil {
+	/*if err := g.AddEdge(nodeChatModel, nodeTools); err != nil {
 		return nil, err
 	}
 	if err := g.AddEdge(nodeTools, nodeChatModel); err != nil {
 		return nil, err
-	}
+	}*/
+
 	if err := g.AddEdge(nodeChatModel, compose.END); err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (p *agentProcessor) buildGraph() (*compose.Graph[map[string]any, *schema.Me
 	return g, nil
 }
 
-func (p *agentProcessor) newChatTemplate() prompt.ChatTemplate {
+func (p *AgentProcessor) newChatTemplate() prompt.ChatTemplate {
 	return prompt.FromMessages(
 		schema.FString,
 		schema.SystemMessage(systemMessage),
@@ -73,7 +74,7 @@ func (p *agentProcessor) newChatTemplate() prompt.ChatTemplate {
 	)
 }
 
-func (p *agentProcessor) newChatModel(ctx context.Context) (model.ToolCallingChatModel, error) {
+func (p *AgentProcessor) newChatModel(ctx context.Context) (model.ToolCallingChatModel, error) {
 	var temp float32 = 0
 	cm, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
 		APIKey:      p.config.APIKey,

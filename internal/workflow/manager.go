@@ -21,7 +21,7 @@ func NewManager() *Manager {
 
 	// 注册示例工作流
 	m.registerExampleWorkflows()
-
+	m.RegisterWorkflows()
 	return m
 }
 

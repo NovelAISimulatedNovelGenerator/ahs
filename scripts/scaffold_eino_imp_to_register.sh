@@ -41,15 +41,11 @@ fi
 # 创建临时文件
 TEMP_FILE="/tmp/register.go.tmp"
 
-# 开始生成新的 register.go
-cat > "$TEMP_FILE" << 'EOF'
-package workflow
-
-import (
-EOF
+# 收集现有导入
+EXISTING_IMPORTS=$(grep -A 20 "import (" "$REGISTER_FILE" | grep -E "^\s*[a-z_]+" | sed 's/^[[:space:]]*//' || true)
 
 # 收集所有包名和注册信息
-PACKAGES=""
+NEW_PACKAGES=""
 REGISTERS=""
 
 # 遍历目录
@@ -58,43 +54,66 @@ for dir in "$EINO_IMP_DIR"/*/; do
     
     dir_name=$(basename "$dir")
     
-    # 查找包含 Process 方法的 .go 文件
-    processor_file=""
+    # 查找包含 Process 方法的 .go 文件和对应的结构体
+    processor_struct=""
     for go_file in "$dir"*.go; do
         [ ! -f "$go_file" ] && continue
         if grep -q "func.*Process.*context\.Context" "$go_file"; then
-            processor_file="$go_file"
+            # 找到包含Process方法的结构体名
+            # 查找 Process 方法的接收者类型
+            processor_struct=$(grep -B 10 "func.*Process.*context\.Context" "$go_file" | grep "type.*struct" | tail -1 | sed 's/type \([A-Za-z0-9_]*\).*/\1/' || true)
+            # 如果找不到，尝试从方法定义中提取
+            if [ -z "$processor_struct" ]; then
+                processor_struct=$(grep "func.*Process.*context\.Context" "$go_file" | sed 's/func (\w* \*\([A-Za-z0-9_]*\)).*/\1/' || true)
+            fi
             break
         fi
     done
     
-    [ -z "$processor_file" ] && continue
-    
-    # 提取类型名
-    type_name=$(grep -E 'type.*struct' "$processor_file" | head -1 | sed 's/type \([A-Za-z0-9_]*\).*/\1/')
-    [ -z "$type_name" ] && continue
+    [ -z "$processor_struct" ] && continue
     
     # 检查是否已注册
-    register_line="m.Register(\"${dir_name}\", &${dir_name}.${type_name}{})"
+    register_line="m.Register(\"${dir_name}\", &${dir_name}.${processor_struct}{})"
     if grep -q "$register_line" "$REGISTER_FILE"; then
-        green "已注册: $dir_name ($type_name)"
+        green "已注册: $dir_name ($processor_struct)"
         continue
     fi
     
-    PACKAGES="$PACKAGES $dir_name"
-    REGISTERS="$REGISTERS $dir_name|$type_name"
-    green "发现新 workflow: $dir_name ($type_name)"
+    # 检查是否已经在现有导入中
+    if echo "$EXISTING_IMPORTS" | grep -q "$dir_name"; then
+        green "包已导入: $dir_name, 仅添加注册"
+    else
+        NEW_PACKAGES="$NEW_PACKAGES $dir_name"
+    fi
+    
+    REGISTERS="$REGISTERS $dir_name|$processor_struct"
+    green "发现新 workflow: $dir_name ($processor_struct)"
 done
 
 # 如果没有新发现的 workflow
 if [ -z "$REGISTERS" ]; then
     yellow "没有发现需要注册的新 workflow"
-    rm -f "$TEMP_FILE"
     exit 0
 fi
 
-# 添加导入
-for package_name in $PACKAGES; do
+# 开始生成新的 register.go
+cat > "$TEMP_FILE" << 'EOF'
+package workflow
+
+import (
+EOF
+
+# 添加现有导入
+if [ -n "$EXISTING_IMPORTS" ]; then
+    echo "$EXISTING_IMPORTS" | while read -r import_line; do
+        if [ -n "$import_line" ]; then
+            echo "\t$import_line" >> "$TEMP_FILE"
+        fi
+    done
+fi
+
+# 添加新导入
+for package_name in $NEW_PACKAGES; do
     echo "\t${package_name} \"ahs/internal/workflow/eino_imp/${package_name}\"" >> "$TEMP_FILE"
 done
 
@@ -111,8 +130,12 @@ grep "m.Register" "$REGISTER_FILE" | grep -v "// Register workflow" >> "$TEMP_FI
 # 添加新注册代码
 for register_info in $REGISTERS; do
     package_name=$(echo "$register_info" | cut -d'|' -f1)
-    type_name=$(echo "$register_info" | cut -d'|' -f2)
-    echo "\tm.Register(\"${package_name}\", &${package_name}.${type_name}{})" >> "$TEMP_FILE"
+    struct_name=$(echo "$register_info" | cut -d'|' -f2)
+    # 检查是否已存在相同注册
+    register_line="m.Register(\"${package_name}\", &${package_name}.${struct_name}{})"
+    if ! grep -q "$register_line" "$TEMP_FILE"; then
+        echo "\tm.Register(\"${package_name}\", &${package_name}.${struct_name}{})" >> "$TEMP_FILE"
+    fi
 done
 
 echo "}" >> "$TEMP_FILE"

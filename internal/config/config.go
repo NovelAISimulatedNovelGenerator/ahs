@@ -1,6 +1,7 @@
 package config
 
 import (
+	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -9,10 +10,11 @@ import (
 
 // Config 应用配置结构
 type Config struct {
-	Server     ServerConfig     `mapstructure:"server"`
-	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
-	Log        LogConfig        `mapstructure:"log"`
-	WorkerPool WorkerPoolConfig `mapstructure:"worker_pool"`
+	Server     ServerConfig            `mapstructure:"server"`
+	RateLimit  RateLimitConfig         `mapstructure:"rate_limit"`
+	Log        LogConfig               `mapstructure:"log"`
+	WorkerPool WorkerPoolConfig        `mapstructure:"worker_pool"`
+	LLMConfigs map[string]LLMConfig `mapstructure:"llm_configs"`
 }
 
 // ServerConfig 服务器配置
@@ -44,6 +46,13 @@ type LogConfig struct {
 type WorkerPoolConfig struct {
 	Workers   int `mapstructure:"workers"`
 	QueueSize int `mapstructure:"queue_size"`
+}
+
+// LLMConfig LLM配置结构
+type LLMConfig struct {
+	APIBaseURL string `mapstructure:"api_base_url"`
+	APIKey     string `mapstructure:"api_key"`
+	Model      string `mapstructure:"model"`
 }
 
 // Load 加载配置文件
@@ -88,6 +97,9 @@ func setDefaults() {
 
 	viper.SetDefault("worker_pool.workers", 8)
 	viper.SetDefault("worker_pool.queue_size", 32)
+	
+	// LLM配置默认为空map，用户可在配置文件中定义多个LLM提供商
+	viper.SetDefault("llm_configs", map[string]interface{}{})
 }
 
 // GetAddress 获取服务器地址
@@ -110,13 +122,36 @@ func (l *LogConfig) BuildZapConfig() zap.Config {
 	default:
 		level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	}
-
 	return zap.Config{
 		Level:            level,
 		Development:      false,
 		Encoding:         l.Encoding,
 		OutputPaths:      l.OutputPaths,
 		ErrorOutputPaths: l.ErrorOutputPaths,
-		EncoderConfig: zap.NewProductionEncoderConfig(),
+		EncoderConfig:    zap.NewProductionEncoderConfig(),
 	}
+}
+
+var (
+	globalConfig     *Config
+	globalConfigOnce sync.Once
+	globalConfigErr  error
+)
+
+// SetGlobalConfig 设置全局配置实例
+func SetGlobalConfig(cfg *Config) {
+	globalConfig = cfg
+}
+
+// GetGlobalConfig 获取全局配置实例
+func GetGlobalConfig() *Config {
+	return globalConfig
+}
+
+// LoadGlobalConfig 加载并设置全局配置
+func LoadGlobalConfig(configPath string) (*Config, error) {
+	globalConfigOnce.Do(func() {
+		globalConfig, globalConfigErr = Load(configPath)
+	})
+	return globalConfig, globalConfigErr
 }

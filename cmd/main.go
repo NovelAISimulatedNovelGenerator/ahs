@@ -27,6 +27,9 @@ func main() {
 	if err != nil {
 		panic("加载配置失败: " + err.Error())
 	}
+	
+	// 设置全局配置
+	config.SetGlobalConfig(cfg)
 
 	// 初始化日志
 	logger, err := initLogger(cfg)
