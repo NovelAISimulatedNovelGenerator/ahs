@@ -214,7 +214,7 @@ configs 与 Dockerfile     # 配置与镜像
 
 ## 规划与 TODO（摘）
 
-- [ ] 暴露 RAG 工具化接口（memory_save / memory_query）到工作流工具集。
+- [ ] 暴露 RAG 工具化接口（memory_save / memory_query）到工作流工具集o。
 - [ ] 对接外部向量/三元组检索服务，融合召回与排序。
 - [ ] OpenAPI/Swagger 文档与 SDK。
 - [ ] 完善权限与多租户校验策略。
