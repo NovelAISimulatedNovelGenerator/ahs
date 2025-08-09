@@ -161,3 +161,6 @@ feat: optimize tool output format with marshalString refactoring (#287)
 Jun 18, 2025
 streamable_func_test.go
 https://raw.githubusercontent.com/cloudwego/eino/main/components/tool/{$file}
+
+
+RAG 对外 API：是否需要在 HTTP 层新增 `POST /api/memory/save` 与 `POST /api/memory/query` 便于工作流外部直接调用？
