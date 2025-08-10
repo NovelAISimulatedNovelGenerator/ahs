@@ -1,3 +1,4 @@
 /vendor
 agent_http_server
 config.yaml
+/data

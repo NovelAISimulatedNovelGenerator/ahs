@@ -1,1 +1,1 @@
-curl -s -X POST http://localhost:8081/api/execute -H "Content-Type: application/json" -d '{"workflow":"agent","input":"你好","timeout":180}' | jq
+curl -s -X POST http://localhost:8081/api/execute -H "Content-Type: application/json" -d '{"workflow":"agent","user_id": "abc","archive_id": "ddd" ,"input":"你尝试以下读取午后,猫,阅读为tag","timeout":180}' | jq

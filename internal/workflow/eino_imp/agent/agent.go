@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"ahs/internal/config"
+	"ahs/internal/handler"
 	"ahs/internal/service"
 )
 
@@ -35,13 +36,17 @@ func (p *AgentProcessor) Process(ctx context.Context, input string) (string, err
 	p.userInput = input
 	p.ctx = ctx
 
+	if _, ok := handler.GetRequestBody(ctx); !ok {
+		return "", fmt.Errorf("no request body")
+	}
+
 	// 确保配置已初始化
 	if p.config == nil {
 		p.config = loadAgentConfig()
 	}
 
 	// 构建图
-	graph, err := p.buildGraph()
+	graph, err := p.buildGraph(ctx)
 	if err != nil {
 		return "", fmt.Errorf("build graph failed: %w", err)
 	}
@@ -82,7 +87,7 @@ func (p *AgentProcessor) ProcessStream(
 	}
 
 	// 构建图
-	graph, err := p.buildGraph()
+	graph, err := p.buildGraph(ctx)
 	if err != nil {
 		return fmt.Errorf("build graph failed: %w", err)
 	}
