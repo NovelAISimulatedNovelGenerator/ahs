@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	pb "ahs/internal/service/prompt_builder"
 	rt "ahs/internal/workflow/tools/rag_tool"
 
 	"github.com/cloudwego/eino-ext/components/model/openai"
@@ -22,8 +23,6 @@ const (
 	nodePrompt    = "prompt"
 	nodeChatModel = "chat_model"
 	nodeTools     = "tools"
-
-	systemMessage = `You are a helpful assistant`
 )
 
 // 本地状态：用于保留会话历史，确保在工具调用往返后
@@ -134,6 +133,12 @@ func (p *AgentProcessor) buildGraph(ctx context.Context) (*compose.Graph[map[str
 }
 
 func (p *AgentProcessor) newChatTemplate() prompt.ChatTemplate {
+	template, _ := pb.GetSimpleManager().GetTemplate("data_analyst")
+
+	systemMessage, _ := pb.PromptBuilderSugar(
+		template,
+	)
+
 	return prompt.FromMessages(
 		schema.FString,
 		schema.SystemMessage(systemMessage),
