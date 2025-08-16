@@ -96,8 +96,11 @@ func (s *Server) createMiddlewareChain() middleware.Chain {
 	// 日志中间件
 	middlewares = append(middlewares, middleware.Logger(s.logger))
 
-	// CORS中间件
-	middlewares = append(middlewares, middleware.CORS())
+	// CORS中间件 - 使用配置化的安全CORS策略
+	middlewares = append(middlewares, middleware.ConfigurableCORS(s.config.CORS, s.logger))
+
+	// 租户中间件 - 在业务逻辑之前验证租户信息
+	middlewares = append(middlewares, middleware.Tenant(s.config.Tenant, s.logger))
 
 	// 限流中间件
 	if s.config.RateLimit.Enabled {

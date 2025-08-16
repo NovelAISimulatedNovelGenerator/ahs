@@ -1,0 +1,11 @@
+/* Application specific styles */
+
+/* Ensure proper layout for the application */
+#root {
+  height: 100%;
+}
+
+/* Custom utility classes if needed */
+.text-center {
+  text-align: center;
+}

@@ -133,7 +133,7 @@ func (p *AgentProcessor) buildGraph(ctx context.Context) (*compose.Graph[map[str
 }
 
 func (p *AgentProcessor) newChatTemplate() prompt.ChatTemplate {
-	template, _ := pb.GetSimpleManager().GetTemplate("data_analyst")
+	template, _ := pb.GetSimpleManager().GetTemplate("general_assistant")
 
 	systemMessage, _ := pb.PromptBuilderSugar(
 		template,

@@ -1,0 +1,35 @@
+/* Reset and basic styles for Ant Design compatibility */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5715;
+  color: rgba(0, 0, 0, 0.85);
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Remove default styles that might conflict with Ant Design */
+button {
+  font-family: inherit;
+}
+
+/* Ensure proper text direction and writing mode */
+* {
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+}

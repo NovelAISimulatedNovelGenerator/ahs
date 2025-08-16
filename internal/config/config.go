@@ -1,6 +1,8 @@
 package config
 
 import (
+	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -14,6 +16,8 @@ type Config struct {
 	RateLimit  RateLimitConfig         `mapstructure:"rate_limit"`
 	Log        LogConfig               `mapstructure:"log"`
 	WorkerPool WorkerPoolConfig        `mapstructure:"worker_pool"`
+	Tenant     TenantConfig            `mapstructure:"tenant"`
+	CORS       CORSConfig              `mapstructure:"cors"`
 	LLMConfigs map[string]LLMConfig `mapstructure:"llm_configs"`
 }
 
@@ -46,6 +50,23 @@ type LogConfig struct {
 type WorkerPoolConfig struct {
 	Workers   int `mapstructure:"workers"`
 	QueueSize int `mapstructure:"queue_size"`
+}
+
+// TenantConfig 租户配置
+type TenantConfig struct {
+	Required     bool     `mapstructure:"required"`      // 是否必需租户头部
+	ExcludePaths []string `mapstructure:"exclude_paths"` // 排除的路径（正则表达式）
+}
+
+// CORSConfig CORS配置
+type CORSConfig struct {
+	Enabled        bool     `mapstructure:"enabled"`         // 是否启用CORS
+	AllowedOrigins []string `mapstructure:"allowed_origins"` // 允许的域名
+	AllowedMethods []string `mapstructure:"allowed_methods"` // 允许的HTTP方法
+	AllowedHeaders []string `mapstructure:"allowed_headers"` // 允许的请求头
+	ExposedHeaders []string `mapstructure:"exposed_headers"` // 暴露的响应头
+	AllowCredentials bool   `mapstructure:"allow_credentials"` // 是否允许凭证
+	MaxAge         int      `mapstructure:"max_age"`         // 预检请求缓存时间(秒)
 }
 
 // LLMConfig LLM配置结构
@@ -98,13 +119,26 @@ func setDefaults() {
 	viper.SetDefault("worker_pool.workers", 8)
 	viper.SetDefault("worker_pool.queue_size", 32)
 	
+	// 租户配置默认值
+	viper.SetDefault("tenant.required", true) // 默认要求租户信息（因为上游Hertz已验证）
+	viper.SetDefault("tenant.exclude_paths", []string{"^/health$", "^/api/workflows$"})
+	
+	// CORS配置默认值
+	viper.SetDefault("cors.enabled", true)
+	viper.SetDefault("cors.allowed_origins", []string{"http://localhost:5173"}) // 默认允许前端开发端口
+	viper.SetDefault("cors.allowed_methods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+	viper.SetDefault("cors.allowed_headers", []string{"Content-Type", "Authorization", "X-User-ID", "X-Archive-ID"})
+	viper.SetDefault("cors.exposed_headers", []string{})
+	viper.SetDefault("cors.allow_credentials", false)
+	viper.SetDefault("cors.max_age", 86400) // 24小时
+	
 	// LLM配置默认为空map，用户可在配置文件中定义多个LLM提供商
 	viper.SetDefault("llm_configs", map[string]interface{}{})
 }
 
 // GetAddress 获取服务器地址
 func (s *ServerConfig) GetAddress() string {
-	return s.Host + ":" + string(rune(s.Port))
+	return net.JoinHostPort(s.Host, strconv.Itoa(s.Port))
 }
 
 // BuildZapConfig 构建Zap日志配置
