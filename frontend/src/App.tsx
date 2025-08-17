@@ -8,6 +8,7 @@ import { WorkflowDetail } from './components/WorkflowDetail'
 import { WorkflowExecute } from './components/WorkflowExecute'
 import { WorkflowStream } from './components/WorkflowStream'
 import { DebugLogs } from './components/DebugLogs'
+import { ChatLayout } from './components/ChatLayout'
 import { useSettingsStore } from './stores/settings'
 
 const { Header, Content, Sider } = Layout
@@ -29,6 +30,9 @@ function AppLayout() {
   const location = useLocation()
   const { initialize } = useSettingsStore()
 
+  // 检查是否为聊天页面
+  const isChatPage = location.pathname === '/chat'
+
   // 初始化设置
   useEffect(() => {
     initialize()
@@ -39,7 +43,19 @@ function AppLayout() {
     setSelectedKeys([location.pathname])
   }, [location.pathname])
 
+  // 如果是聊天页面，直接返回聊天布局，不显示主应用导航
+  if (isChatPage) {
+    return <ChatLayout />
+  }
+
   const menuItems = [
+    {
+      key: 'chat',
+      label: '聊天',
+      children: [
+        { key: '/chat', label: 'AI对话' },
+      ],
+    },
     {
       key: 'workflows',
       label: '工作流',
@@ -73,7 +89,7 @@ function AppLayout() {
         <Menu
           mode="inline"
           selectedKeys={selectedKeys}
-          defaultOpenKeys={['workflows', 'debug', 'settings']}
+          defaultOpenKeys={['chat', 'workflows', 'debug', 'settings']}
           items={menuItems}
           onClick={({ key }) => {
             navigate(key)
@@ -90,7 +106,7 @@ function AppLayout() {
 
         <Content style={{ background: '#f0f2f5' }}>
           <Routes>
-            <Route path="/" element={<Navigate to="/workflows" replace />} />
+            <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/workflows" element={<WorkflowList />} />
             <Route path="/workflows/:name" element={<WorkflowDetail />} />
             <Route path="/execute" element={<WorkflowExecute />} />

@@ -26,9 +26,14 @@ class ApiClient {
       'Content-Type': 'application/json',
     }
 
+    // 始终添加租户头部，使用配置的值或默认值
     if (this.tenant) {
       headers['X-User-ID'] = this.tenant.userId
       headers['X-Archive-ID'] = this.tenant.archiveId
+    } else {
+      // 使用默认租户信息，避免后端拒绝请求
+      headers['X-User-ID'] = 'default_user'
+      headers['X-Archive-ID'] = 'default_archive'
     }
 
     return headers

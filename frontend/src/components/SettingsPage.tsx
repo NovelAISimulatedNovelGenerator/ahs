@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Form, Input, Button, Typography, Space, notification } from 'antd'
+import { Card, Form, Input, Button, Typography, Space, notification, Alert } from 'antd'
 import { useSettingsStore } from '../stores/settings'
 import type { TenantInfo, ApiSettings } from '../types/api'
 
@@ -102,6 +102,15 @@ export function SettingsPage() {
 
         {/* 租户设置 */}
         <Card title="租户设置" size="small">
+          {!tenantInfo && (
+            <Alert
+              message="当前使用默认租户"
+              description="系统正在使用默认租户信息 (default_user/default_archive)。建议配置专用的租户信息以确保数据隔离。"
+              type="warning"
+              showIcon
+              style={{ marginBottom: '16px' }}
+            />
+          )}
           <Text type="secondary" style={{ display: 'block', marginBottom: '16px' }}>
             配置用户ID和归档ID，用于RAG系统的多租户隔离。留空则使用默认租户。
           </Text>
@@ -161,10 +170,18 @@ export function SettingsPage() {
                 </div>
               </>
             ) : (
-              <div>
-                <Text strong>租户状态: </Text>
-                <Text type="secondary">未配置（使用默认租户）</Text>
-              </div>
+              <>
+                <div>
+                  <Text strong>用户ID: </Text>
+                  <Text code type="warning">default_user</Text>
+                  <Text type="secondary"> （默认值）</Text>
+                </div>
+                <div>
+                  <Text strong>归档ID: </Text>
+                  <Text code type="warning">default_archive</Text>
+                  <Text type="secondary"> （默认值）</Text>
+                </div>
+              </>
             )}
           </Space>
         </Card>

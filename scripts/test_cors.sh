@@ -1,4 +1,4 @@
-#!/bin/sh
+w#!/bin/sh
 
 # test_cors.sh
 # 测试CORS配置功能

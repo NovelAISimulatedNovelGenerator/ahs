@@ -52,3 +52,26 @@ export interface DebugLogEntry {
   summary: string
   details?: unknown
 }
+
+// 聊天相关类型
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  isStreaming?: boolean
+}
+
+export interface ChatSession {
+  id: string
+  title: string
+  messages: ChatMessage[]
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ChatStore {
+  sessions: ChatSession[]
+  currentSessionId: string | null
+  isStreaming: boolean
+}
